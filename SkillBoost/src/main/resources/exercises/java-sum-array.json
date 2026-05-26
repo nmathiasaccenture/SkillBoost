@@ -1,0 +1,16 @@
+{
+  "id": "java-sum-array",
+  "language": "java",
+  "difficulty": 1,
+  "title": "Sum of array (off-by-one)",
+  "description": "This method should return the sum of all integers in the array. The current implementation has a subtle bug — find and fix it.",
+  "buggyCode": "public class Solution {\n    public static int sum(int[] nums) {\n        int total = 0;\n        for (int i = 0; i < nums.length - 1; i++) {\n            total += nums[i];\n        }\n        return total;\n    }\n}\n",
+  "solutionCode": "public class Solution {\n    public static int sum(int[] nums) {\n        int total = 0;\n        for (int i = 0; i < nums.length; i++) {\n            total += nums[i];\n        }\n        return total;\n    }\n}\n",
+  "testHarness": "import java.util.Arrays;\n\npublic class Runner {\n    record Case(String label, int[] input, int expected) {}\n\n    public static void main(String[] args) {\n        Case[] cases = new Case[]{\n            new Case(\"[1, 2, 3, 4, 5]\", new int[]{1, 2, 3, 4, 5}, 15),\n            new Case(\"[10]\", new int[]{10}, 10),\n            new Case(\"[-1, 1]\", new int[]{-1, 1}, 0),\n            new Case(\"[]\", new int[]{}, 0)\n        };\n        for (Case c : cases) {\n            try {\n                int actual = Solution.sum(c.input);\n                if (actual == c.expected) {\n                    System.out.println(\"PASS\\t\" + c.label);\n                } else {\n                    System.out.println(\"FAIL\\t\" + c.label + \"\\t\" + c.expected + \"\\t\" + actual);\n                }\n            } catch (Throwable t) {\n                System.out.println(\"ERROR\\t\" + c.label + \"\\t\" + t.getClass().getSimpleName() + \": \" + t.getMessage());\n            }\n        }\n    }\n}\n",
+  "tests": [
+    { "input": "[1, 2, 3, 4, 5]", "expected": "15" },
+    { "input": "[10]", "expected": "10" },
+    { "input": "[-1, 1]", "expected": "0" },
+    { "input": "[]", "expected": "0" }
+  ]
+}
