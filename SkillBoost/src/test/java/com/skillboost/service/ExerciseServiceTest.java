@@ -25,7 +25,8 @@ class ExerciseServiceTest {
 
         assertThat(exercises).isNotEmpty();
         assertThat(exercises).extracting(Exercise::id)
-                .contains("java-sum-array", "java-reverse-string");
+                .contains("java-sum-array", "java-reverse-string",
+                        "java-find-max", "java-factorial", "java-count-vowels");
     }
 
     @Test

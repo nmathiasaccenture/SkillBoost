@@ -1,0 +1,16 @@
+{
+  "id": "java-factorial",
+  "language": "java",
+  "difficulty": 1,
+  "title": "Factorial (loop boundary)",
+  "description": "This method should return n! (the product of integers from 1 to n). By convention, factorial(0) is 1. The current implementation gives the wrong result for most inputs — find the bug.",
+  "buggyCode": "public class Solution {\n    public static int factorial(int n) {\n        int result = 1;\n        for (int i = 1; i < n; i++) {\n            result *= i;\n        }\n        return result;\n    }\n}\n",
+  "solutionCode": "public class Solution {\n    public static int factorial(int n) {\n        int result = 1;\n        for (int i = 1; i <= n; i++) {\n            result *= i;\n        }\n        return result;\n    }\n}\n",
+  "testHarness": "public class Runner {\n    record Case(String label, int input, int expected) {}\n\n    public static void main(String[] args) {\n        Case[] cases = new Case[]{\n            new Case(\"0\", 0, 1),\n            new Case(\"1\", 1, 1),\n            new Case(\"5\", 5, 120),\n            new Case(\"6\", 6, 720)\n        };\n        for (Case c : cases) {\n            try {\n                int actual = Solution.factorial(c.input);\n                if (actual == c.expected) {\n                    System.out.println(\"PASS\\t\" + c.label);\n                } else {\n                    System.out.println(\"FAIL\\t\" + c.label + \"\\t\" + c.expected + \"\\t\" + actual);\n                }\n            } catch (Throwable t) {\n                System.out.println(\"ERROR\\t\" + c.label + \"\\t\" + t.getClass().getSimpleName() + \": \" + t.getMessage());\n            }\n        }\n    }\n}\n",
+  "tests": [
+    { "input": "0", "expected": "1" },
+    { "input": "1", "expected": "1" },
+    { "input": "5", "expected": "120" },
+    { "input": "6", "expected": "720" }
+  ]
+}
