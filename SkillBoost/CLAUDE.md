@@ -38,7 +38,16 @@ For end-to-end work both servers must be running: backend on 8080, frontend on 5
    - Any other line is ignored. If no lines are produced but stderr is non-empty, stderr is reported as a single failing `(execution)` result.
 5. Both compile and execute steps are bounded by `skillboost.judge.timeout-seconds` (default 5s, see [application.properties](src/main/resources/application.properties)). Timeouts produce a synthetic failing test rather than an exception.
 
-Because the judges shell out to `javac`/`java`, `node`, and `python`, **the runtimes on `PATH` are what run user code** — there is no in-process compilation and no sandbox. Treat this as trusted-input only. The Python judge invokes `python` (not `python3`); on systems where only `python3` exists, change [PythonJudge.executeCommand()](src/main/java/com/skillboost/service/PythonJudge.java).
+Because the judges shell out to `javac`/`java`, `node`, and `python`, **the runtimes on `PATH` are what run user code** — there is no in-process compilation. The Python judge invokes `python` (not `python3`); on systems where only `python3` exists, change [PythonJudge.executeCommand()](src/main/java/com/skillboost/service/PythonJudge.java).
+
+### Sandboxing
+
+Both the compile and execute steps are routed through a `Sandbox` ([src/main/java/com/skillboost/service/sandbox/](src/main/java/com/skillboost/service/sandbox/)) which wraps the command before `AbstractProcessJudge` spawns it. [SandboxConfig](src/main/java/com/skillboost/config/SandboxConfig.java) picks an implementation at startup:
+
+- **Linux + `bwrap` on PATH** → [BwrapSandbox](src/main/java/com/skillboost/service/sandbox/BwrapSandbox.java) wraps with bubblewrap: network unshared (`--unshare-net`), filesystem restricted to read-only system paths (`/usr`, `/etc`, `/bin`, `/sbin`, `/lib*`, `/opt`), `/proc` + `/dev` + a tmpfs `/tmp`, and the per-submission temp dir bind-mounted as the only writable location. Also unshares PID/IPC/UTS namespaces and uses `--die-with-parent` so orphaned children get killed with the JVM.
+- **Anything else** (Windows, or Linux without bwrap, or `skillboost.judge.sandbox.enabled=false`) → [NoSandbox](src/main/java/com/skillboost/service/sandbox/NoSandbox.java) is used and a warning is logged at startup. User code runs unsandboxed against the host — treat as trusted-input only.
+
+Tests construct judges directly with `new XxxJudge()`, which uses the no-arg constructor that defaults to `NoSandbox`. Spring uses the `@Autowired` constructor that takes the injected `Sandbox` bean.
 
 ### Exercise loading
 

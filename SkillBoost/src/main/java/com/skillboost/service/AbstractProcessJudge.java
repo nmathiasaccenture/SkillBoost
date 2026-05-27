@@ -3,6 +3,8 @@ package com.skillboost.service;
 import com.skillboost.model.Exercise;
 import com.skillboost.model.SubmissionResult;
 import com.skillboost.model.SubmissionResult.TestResult;
+import com.skillboost.service.sandbox.NoSandbox;
+import com.skillboost.service.sandbox.Sandbox;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
@@ -18,6 +20,16 @@ public abstract class AbstractProcessJudge {
 
     @Value("${skillboost.judge.timeout-seconds:5}")
     protected int timeoutSeconds;
+
+    protected final Sandbox sandbox;
+
+    protected AbstractProcessJudge(Sandbox sandbox) {
+        this.sandbox = sandbox;
+    }
+
+    protected AbstractProcessJudge() {
+        this(new NoSandbox("no Spring context"));
+    }
 
     protected abstract String solutionFilename();
 
@@ -54,7 +66,7 @@ public abstract class AbstractProcessJudge {
      * or a user-facing error string on failure / timeout / interrupt.
      */
     protected String runProcessMerged(Path workDir, List<String> command, String label) throws IOException {
-        Process p = new ProcessBuilder(command)
+        Process p = new ProcessBuilder(sandbox.wrap(command, workDir))
                 .directory(workDir.toFile())
                 .redirectErrorStream(true)
                 .start();
@@ -73,7 +85,7 @@ public abstract class AbstractProcessJudge {
     }
 
     private List<TestResult> execute(Path workDir) throws IOException {
-        Process p = new ProcessBuilder(executeCommand())
+        Process p = new ProcessBuilder(sandbox.wrap(executeCommand(), workDir))
                 .directory(workDir.toFile())
                 .redirectErrorStream(false)
                 .start();
