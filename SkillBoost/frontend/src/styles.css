@@ -156,6 +156,42 @@ button.secondary:hover:not(:disabled) { background: var(--border); }
 }
 .hint strong { color: var(--accent); margin-right: 0.25rem; }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.modal {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.modal h3 {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 1rem;
+}
+.modal p {
+  margin: 0 0 1.25rem;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .solution { margin-bottom: 1rem; }
 .solution h3 {
   margin: 0 0 0.5rem;

@@ -25,6 +25,7 @@ export default function App() {
   const [hintShown, setHintShown] = useState(false);
   const [solutionCode, setSolutionCode] = useState<string | null>(null);
   const [solutionError, setSolutionError] = useState<string | null>(null);
+  const [confirmingSolution, setConfirmingSolution] = useState(false);
 
   const visible = useMemo(
     () => exercises.filter((ex) => ex.language === language),
@@ -67,14 +68,12 @@ export default function App() {
     setHintShown(false);
     setSolutionCode(null);
     setSolutionError(null);
+    setConfirmingSolution(false);
   }
 
-  async function revealSolution() {
+  async function confirmRevealSolution() {
     if (!selected) return;
-    const ok = window.confirm(
-      'Show the full solution? Try the hint first if you have not already.',
-    );
-    if (!ok) return;
+    setConfirmingSolution(false);
     try {
       const r = await fetchSolution(selected.id);
       setSolutionCode(r.solutionCode);
@@ -184,11 +183,47 @@ export default function App() {
                 )}
                 <button
                   className="secondary"
-                  onClick={solutionCode ? () => setSolutionCode(null) : revealSolution}
+                  onClick={
+                    solutionCode
+                      ? () => setSolutionCode(null)
+                      : () => setConfirmingSolution(true)
+                  }
                 >
                   {solutionCode ? 'Hide solution' : 'Show solution'}
                 </button>
               </section>
+
+              {confirmingSolution && (
+                <div
+                  className="modal-backdrop"
+                  onClick={() => setConfirmingSolution(false)}
+                >
+                  <div
+                    className="modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="confirm-solution-title"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h3 id="confirm-solution-title">Show the full solution?</h3>
+                    <p>
+                      You will see the complete answer below the editor. Try the
+                      hint first if you have not already.
+                    </p>
+                    <div className="modal-actions">
+                      <button
+                        className="secondary"
+                        onClick={() => setConfirmingSolution(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button onClick={confirmRevealSolution}>
+                        Show solution
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {hintShown && selected.hint && (
                 <section className="hint">
