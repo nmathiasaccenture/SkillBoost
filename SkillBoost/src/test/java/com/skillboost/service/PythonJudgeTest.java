@@ -50,9 +50,7 @@ class PythonJudgeTest {
     }
 
     static Stream<Arguments> pythonExercises() throws Exception {
-        ExerciseService service = new ExerciseService();
-        service.loadExercises();
-        return service.list().stream()
+        return new JsonExerciseLoader().loadAll().stream()
                 .filter(ex -> "python".equals(ex.language()))
                 .map(ex -> Arguments.of(Named.of(ex.id(), ex)));
     }

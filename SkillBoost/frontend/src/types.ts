@@ -9,6 +9,11 @@ export interface Exercise {
   tests: TestCase[];
 }
 
+export interface AdminExercise extends Exercise {
+  solutionCode: string;
+  testHarness: string;
+}
+
 export interface SolutionResponse {
   solutionCode: string;
 }
@@ -31,4 +36,33 @@ export interface SubmissionResult {
   compileError: string | null;
   allPassed: boolean;
   results: TestResult[];
+}
+
+export type Role = 'USER' | 'ADMIN';
+
+export interface AuthUser {
+  username: string;
+  role: Role;
+  token: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  username: string;
+  role: Role;
+  expiresInMs: number;
+}
+
+export interface MeResponse {
+  username: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+}
+
+export interface Progress {
+  exerciseId: string;
+  solved: boolean;
+  firstSolvedAt: string | null;
+  attempts: number;
 }

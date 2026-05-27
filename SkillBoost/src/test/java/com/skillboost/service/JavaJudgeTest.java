@@ -26,9 +26,9 @@ class JavaJudgeTest {
         judge = new JavaJudge();
         ReflectionTestUtils.setField(judge, "timeoutSeconds", 15);
 
-        ExerciseService exercises = new ExerciseService();
-        exercises.loadExercises();
-        Optional<Exercise> ex = exercises.findById("java-sum-array");
+        Optional<Exercise> ex = new JsonExerciseLoader().loadAll().stream()
+                .filter(e -> "java-sum-array".equals(e.id()))
+                .findFirst();
         assertThat(ex).isPresent();
         sumArray = ex.get();
     }
@@ -123,9 +123,7 @@ class JavaJudgeTest {
     }
 
     static Stream<Arguments> allExercises() throws Exception {
-        ExerciseService service = new ExerciseService();
-        service.loadExercises();
-        return service.list().stream()
+        return new JsonExerciseLoader().loadAll().stream()
                 .filter(ex -> "java".equals(ex.language()))
                 .map(ex -> Arguments.of(Named.of(ex.id(), ex)));
     }

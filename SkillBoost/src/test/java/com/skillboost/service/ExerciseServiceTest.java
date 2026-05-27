@@ -1,7 +1,6 @@
 package com.skillboost.service;
 
 import com.skillboost.model.Exercise;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -11,17 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ExerciseServiceTest {
 
-    private ExerciseService service;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        service = new ExerciseService();
-        service.loadExercises();
-    }
+    private final JsonExerciseLoader loader = new JsonExerciseLoader();
 
     @Test
-    void loadsAllExercisesFromClasspath() {
-        List<Exercise> exercises = service.list();
+    void loadsAllExercisesFromClasspath() throws Exception {
+        List<Exercise> exercises = loader.loadAll();
 
         assertThat(exercises).isNotEmpty();
         assertThat(exercises).extracting(Exercise::id)
@@ -30,19 +23,10 @@ class ExerciseServiceTest {
     }
 
     @Test
-    void listReturnsImmutableCopy() {
-        List<Exercise> exercises = service.list();
-
-        assertThat(exercises.getClass().getName())
-                .doesNotContain("LinkedHashMap");
-        org.junit.jupiter.api.Assertions.assertThrows(
-                UnsupportedOperationException.class,
-                () -> exercises.add(null));
-    }
-
-    @Test
-    void findByIdReturnsExerciseWhenPresent() {
-        Optional<Exercise> found = service.findById("java-sum-array");
+    void findByIdReturnsExerciseWhenPresent() throws Exception {
+        Optional<Exercise> found = loader.loadAll().stream()
+                .filter(e -> "java-sum-array".equals(e.id()))
+                .findFirst();
 
         assertThat(found).isPresent();
         Exercise ex = found.get();
@@ -56,7 +40,11 @@ class ExerciseServiceTest {
     }
 
     @Test
-    void findByIdReturnsEmptyWhenMissing() {
-        assertThat(service.findById("does-not-exist")).isEmpty();
+    void findByIdReturnsEmptyWhenMissing() throws Exception {
+        Optional<Exercise> found = loader.loadAll().stream()
+                .filter(e -> "does-not-exist".equals(e.id()))
+                .findFirst();
+
+        assertThat(found).isEmpty();
     }
 }

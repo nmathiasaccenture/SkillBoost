@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { fetchExercises, fetchSolution, submit } from './api';
-import type { Exercise, SubmissionResult } from './types';
+import { fetchExercises, fetchProgress, fetchSolution, submit } from './api';
+import { useAuth } from './auth';
+import { AuthDialog } from './components/AuthForms';
+import { AdminPanel } from './components/AdminPanel';
+import type { Exercise, Progress, SubmissionResult } from './types';
 
 const LANGUAGES: { id: string; label: string }[] = [
   { id: 'java', label: 'Java' },
@@ -15,6 +18,7 @@ function monacoLanguage(lang: string): string {
 }
 
 export default function App() {
+  const { user, loading: authLoading, logout } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [language, setLanguage] = useState<string>('java');
   const [selected, setSelected] = useState<Exercise | null>(null);
@@ -26,11 +30,32 @@ export default function App() {
   const [solutionCode, setSolutionCode] = useState<string | null>(null);
   const [solutionError, setSolutionError] = useState<string | null>(null);
   const [confirmingSolution, setConfirmingSolution] = useState(false);
+  const [progress, setProgress] = useState<Progress[]>([]);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [view, setView] = useState<'practice' | 'admin'>('practice');
 
   const visible = useMemo(
     () => exercises.filter((ex) => ex.language === language),
     [exercises, language],
   );
+
+  const solvedSet = useMemo(
+    () => new Set(progress.filter((p) => p.solved).map((p) => p.exerciseId)),
+    [progress],
+  );
+
+  const attemptsByExercise = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of progress) map.set(p.exerciseId, p.attempts);
+    return map;
+  }, [progress]);
+
+  const refreshProgress = useCallback(() => {
+    if (!user) return;
+    fetchProgress()
+      .then(setProgress)
+      .catch(() => setProgress([]));
+  }, [user]);
 
   useEffect(() => {
     fetchExercises()
@@ -44,6 +69,11 @@ export default function App() {
       })
       .catch((e) => setLoadError(String(e)));
   }, []);
+
+  useEffect(() => {
+    if (user) refreshProgress();
+    else setProgress([]);
+  }, [user, refreshProgress]);
 
   function pickLanguage(lang: string) {
     if (lang === language) return;
@@ -90,6 +120,7 @@ export default function App() {
     try {
       const r = await submit(selected.id, code);
       setResult(r);
+      if (user) refreshProgress();
     } catch (e) {
       setResult({
         compiled: false,
@@ -100,6 +131,32 @@ export default function App() {
     } finally {
       setRunning(false);
     }
+  }
+
+  if (view === 'admin' && user?.role === 'ADMIN') {
+    return (
+      <div className="app">
+        <header className="header">
+          <h1>SkillBoost</h1>
+          <span className="tagline">Admin</span>
+          <div className="header-right">
+            <span className="user-chip">
+              {user.username} <span className="role-badge admin">ADMIN</span>
+            </span>
+            <button className="secondary" onClick={logout}>
+              Sign out
+            </button>
+          </div>
+        </header>
+        <AdminPanel
+          onClose={() => {
+            setView('practice');
+            // Re-fetch exercises in case admin made changes.
+            fetchExercises().then(setExercises).catch(() => {});
+          }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -118,28 +175,71 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="header-right">
+          {authLoading ? null : user ? (
+            <>
+              <span className="user-chip">
+                {user.username}
+                {user.role === 'ADMIN' && <span className="role-badge admin">ADMIN</span>}
+              </span>
+              {user.role === 'ADMIN' && (
+                <button className="secondary" onClick={() => setView('admin')}>
+                  Admin
+                </button>
+              )}
+              <button className="secondary" onClick={logout}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button className="secondary" onClick={() => setAuthDialogOpen(true)}>
+              Sign in
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="layout">
         <aside className="sidebar">
           <h2>Exercises</h2>
+          {user && (
+            <div className="progress-summary">
+              {solvedSet.size} / {visible.length} solved in {language}
+            </div>
+          )}
           {loadError && <div className="error">{loadError}</div>}
           {visible.length === 0 && !loadError && (
             <div className="empty">No exercises for this language yet.</div>
           )}
           <ul>
-            {visible.map((ex) => (
-              <li
-                key={ex.id}
-                className={selected?.id === ex.id ? 'active' : ''}
-                onClick={() => selectExercise(ex)}
-              >
-                <div className="ex-title">{ex.title}</div>
-                <div className="ex-meta">
-                  {ex.language} · difficulty {ex.difficulty}
-                </div>
-              </li>
-            ))}
+            {visible.map((ex) => {
+              const solved = solvedSet.has(ex.id);
+              const attempts = attemptsByExercise.get(ex.id);
+              return (
+                <li
+                  key={ex.id}
+                  className={selected?.id === ex.id ? 'active' : ''}
+                  onClick={() => selectExercise(ex)}
+                >
+                  <div className="ex-title">
+                    {user && (
+                      <span
+                        className={`solved-marker ${solved ? 'solved' : ''}`}
+                        aria-label={solved ? 'solved' : 'unsolved'}
+                        title={solved ? 'Solved' : 'Not yet solved'}
+                      >
+                        {solved ? '✓' : '○'}
+                      </span>
+                    )}
+                    {ex.title}
+                  </div>
+                  <div className="ex-meta">
+                    {ex.language} · difficulty {ex.difficulty}
+                    {user && attempts ? ` · ${attempts} attempt${attempts === 1 ? '' : 's'}` : ''}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </aside>
 
@@ -149,6 +249,14 @@ export default function App() {
               <section className="problem">
                 <h2>{selected.title}</h2>
                 <p>{selected.description}</p>
+                {!user && (
+                  <p className="muted">
+                    <button className="link" onClick={() => setAuthDialogOpen(true)}>
+                      Sign in
+                    </button>{' '}
+                    to save progress across sessions.
+                  </p>
+                )}
               </section>
 
               <section className="editor">
@@ -263,6 +371,8 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {authDialogOpen && <AuthDialog onClose={() => setAuthDialogOpen(false)} />}
     </div>
   );
 }
