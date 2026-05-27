@@ -1,0 +1,18 @@
+{
+  "id": "python-count-vowels",
+  "language": "python",
+  "difficulty": 1,
+  "title": "Count vowels (case handling)",
+  "description": "This function should return the number of vowels (a, e, i, o, u) in the input string, ignoring case. The current implementation undercounts on some inputs — find the bug.",
+  "hint": "Look at the `vowels` string. The check is case-sensitive — what does it match against an uppercase character?",
+  "buggyCode": "def count_vowels(s):\n    vowels = \"aeiou\"\n    return sum(1 for ch in s if ch in vowels)\n",
+  "solutionCode": "def count_vowels(s):\n    vowels = \"aeiouAEIOU\"\n    return sum(1 for ch in s if ch in vowels)\n",
+  "testHarness": "from solution import count_vowels\n\ncases = [\n    (\"hello\", 2),\n    (\"HELLO\", 2),\n    (\"AeIoU\", 5),\n    (\"xyz\", 0),\n    (\"\", 0),\n]\n\nfor inp, expected in cases:\n    label = repr(inp)\n    try:\n        actual = count_vowels(inp)\n        if actual == expected:\n            print(f\"PASS\\t{label}\")\n        else:\n            print(f\"FAIL\\t{label}\\t{expected}\\t{actual}\")\n    except Exception as e:\n        print(f\"ERROR\\t{label}\\t{type(e).__name__}: {e}\")\n",
+  "tests": [
+    { "input": "'hello'", "expected": "2" },
+    { "input": "'HELLO'", "expected": "2" },
+    { "input": "'AeIoU'", "expected": "5" },
+    { "input": "'xyz'", "expected": "0" },
+    { "input": "''", "expected": "0" }
+  ]
+}

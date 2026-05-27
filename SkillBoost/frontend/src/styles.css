@@ -34,6 +34,24 @@ body, html, #root {
 }
 .header h1 { margin: 0; font-size: 1.25rem; color: var(--accent); }
 .tagline { color: var(--fg-muted); font-size: 0.875rem; }
+.lang-tabs { margin-left: auto; display: flex; gap: 0.25rem; }
+.lang-tab {
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  padding: 0.375rem 0.875rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.lang-tab:hover { background: var(--bg); color: var(--fg); }
+.lang-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.lang-tab.active:hover { background: var(--accent-hover); }
 
 .layout { display: flex; flex: 1; overflow: hidden; }
 
@@ -125,3 +143,29 @@ button.secondary:hover:not(:disabled) { background: var(--border); }
 .test-list code { font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.0625rem 0.25rem; border-radius: 0.1875rem; }
 
 .error { color: var(--fail); font-size: 0.875rem; }
+
+.hint {
+  background: var(--bg-elev);
+  border-left: 3px solid var(--accent);
+  border-radius: 0.25rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fg);
+}
+.hint strong { color: var(--accent); margin-right: 0.25rem; }
+
+.solution { margin-bottom: 1rem; }
+.solution h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+.solution :global(.monaco-editor),
+.solution > div {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}

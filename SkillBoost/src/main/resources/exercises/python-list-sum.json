@@ -1,0 +1,17 @@
+{
+  "id": "python-list-sum",
+  "language": "python",
+  "difficulty": 1,
+  "title": "Sum of list (slice off-by-one)",
+  "description": "This function should return the sum of all integers in the list. The current implementation has a subtle bug — find and fix it.",
+  "hint": "Look at the slice. What does `nums[:-1]` include and exclude?",
+  "buggyCode": "def list_sum(nums):\n    total = 0\n    for n in nums[:-1]:\n        total += n\n    return total\n",
+  "solutionCode": "def list_sum(nums):\n    total = 0\n    for n in nums:\n        total += n\n    return total\n",
+  "testHarness": "from solution import list_sum\n\ncases = [\n    (\"[1, 2, 3, 4, 5]\", [1, 2, 3, 4, 5], 15),\n    (\"[10]\", [10], 10),\n    (\"[-1, 1]\", [-1, 1], 0),\n    (\"[]\", [], 0),\n]\n\nfor label, inp, expected in cases:\n    try:\n        actual = list_sum(inp)\n        if actual == expected:\n            print(f\"PASS\\t{label}\")\n        else:\n            print(f\"FAIL\\t{label}\\t{expected}\\t{actual}\")\n    except Exception as e:\n        print(f\"ERROR\\t{label}\\t{type(e).__name__}: {e}\")\n",
+  "tests": [
+    { "input": "[1, 2, 3, 4, 5]", "expected": "15" },
+    { "input": "[10]", "expected": "10" },
+    { "input": "[-1, 1]", "expected": "0" },
+    { "input": "[]", "expected": "0" }
+  ]
+}

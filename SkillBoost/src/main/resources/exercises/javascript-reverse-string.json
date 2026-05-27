@@ -1,0 +1,17 @@
+{
+  "id": "javascript-reverse-string",
+  "language": "javascript",
+  "difficulty": 1,
+  "title": "Reverse a string (boundary bug)",
+  "description": "This function should return the input string reversed. The current implementation has a bug that produces the wrong output. Find it and fix it.",
+  "hint": "Check the loop's stop condition. Which index is the first character of the string, and does the loop reach it?",
+  "buggyCode": "function reverse(s) {\n  let r = '';\n  for (let i = s.length - 1; i > 0; i--) {\n    r += s[i];\n  }\n  return r;\n}\nmodule.exports = { reverse };\n",
+  "solutionCode": "function reverse(s) {\n  let r = '';\n  for (let i = s.length - 1; i >= 0; i--) {\n    r += s[i];\n  }\n  return r;\n}\nmodule.exports = { reverse };\n",
+  "testHarness": "const { reverse } = require('./solution.js');\n\nconst cases = [\n  { label: '\"hello\"', input: 'hello', expected: 'olleh' },\n  { label: '\"a\"', input: 'a', expected: 'a' },\n  { label: '\"\"', input: '', expected: '' },\n  { label: '\"racecar\"', input: 'racecar', expected: 'racecar' },\n];\n\nfor (const c of cases) {\n  try {\n    const actual = reverse(c.input);\n    if (actual === c.expected) {\n      console.log(`PASS\\t${c.label}`);\n    } else {\n      console.log(`FAIL\\t${c.label}\\t\"${c.expected}\"\\t\"${actual}\"`);\n    }\n  } catch (e) {\n    console.log(`ERROR\\t${c.label}\\t${e.name}: ${e.message}`);\n  }\n}\n",
+  "tests": [
+    { "input": "\"hello\"", "expected": "\"olleh\"" },
+    { "input": "\"a\"", "expected": "\"a\"" },
+    { "input": "\"\"", "expected": "\"\"" },
+    { "input": "\"racecar\"", "expected": "\"racecar\"" }
+  ]
+}

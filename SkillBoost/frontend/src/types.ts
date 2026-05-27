@@ -4,8 +4,13 @@ export interface Exercise {
   difficulty: number;
   title: string;
   description: string;
+  hint: string | null;
   buggyCode: string;
   tests: TestCase[];
+}
+
+export interface SolutionResponse {
+  solutionCode: string;
 }
 
 export interface TestCase {

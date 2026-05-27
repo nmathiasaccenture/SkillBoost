@@ -1,4 +1,4 @@
-import type { Exercise, SubmissionResult } from './types';
+import type { Exercise, SolutionResponse, SubmissionResult } from './types';
 
 export async function fetchExercises(): Promise<Exercise[]> {
   const res = await fetch('/api/exercises');
@@ -9,6 +9,12 @@ export async function fetchExercises(): Promise<Exercise[]> {
 export async function fetchExercise(id: string): Promise<Exercise> {
   const res = await fetch(`/api/exercises/${id}`);
   if (!res.ok) throw new Error(`Failed to load exercise: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchSolution(id: string): Promise<SolutionResponse> {
+  const res = await fetch(`/api/exercises/${id}/solution`);
+  if (!res.ok) throw new Error(`Failed to load solution: ${res.status}`);
   return res.json();
 }
 

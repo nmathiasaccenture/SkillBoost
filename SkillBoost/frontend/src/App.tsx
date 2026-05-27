@@ -1,29 +1,87 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { fetchExercises, submit } from './api';
+import { fetchExercises, fetchSolution, submit } from './api';
 import type { Exercise, SubmissionResult } from './types';
+
+const LANGUAGES: { id: string; label: string }[] = [
+  { id: 'java', label: 'Java' },
+  { id: 'javascript', label: 'JavaScript' },
+  { id: 'python', label: 'Python' },
+];
+
+function monacoLanguage(lang: string): string {
+  if (lang === 'java' || lang === 'javascript' || lang === 'python') return lang;
+  return 'plaintext';
+}
 
 export default function App() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [language, setLanguage] = useState<string>('java');
   const [selected, setSelected] = useState<Exercise | null>(null);
   const [code, setCode] = useState<string>('');
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [running, setRunning] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hintShown, setHintShown] = useState(false);
+  const [solutionCode, setSolutionCode] = useState<string | null>(null);
+  const [solutionError, setSolutionError] = useState<string | null>(null);
+
+  const visible = useMemo(
+    () => exercises.filter((ex) => ex.language === language),
+    [exercises, language],
+  );
 
   useEffect(() => {
     fetchExercises()
       .then((list) => {
         setExercises(list);
-        if (list.length > 0) selectExercise(list[0]);
+        const first = list.find((ex) => ex.language === 'java') ?? list[0];
+        if (first) {
+          setLanguage(first.language);
+          selectExercise(first);
+        }
       })
       .catch((e) => setLoadError(String(e)));
   }, []);
+
+  function pickLanguage(lang: string) {
+    if (lang === language) return;
+    setLanguage(lang);
+    const first = exercises.find((ex) => ex.language === lang);
+    if (first) {
+      selectExercise(first);
+    } else {
+      setSelected(null);
+      setCode('');
+      setResult(null);
+      setHintShown(false);
+      setSolutionCode(null);
+      setSolutionError(null);
+    }
+  }
 
   function selectExercise(ex: Exercise) {
     setSelected(ex);
     setCode(ex.buggyCode);
     setResult(null);
+    setHintShown(false);
+    setSolutionCode(null);
+    setSolutionError(null);
+  }
+
+  async function revealSolution() {
+    if (!selected) return;
+    const ok = window.confirm(
+      'Show the full solution? Try the hint first if you have not already.',
+    );
+    if (!ok) return;
+    try {
+      const r = await fetchSolution(selected.id);
+      setSolutionCode(r.solutionCode);
+      setSolutionError(null);
+    } catch (e) {
+      setSolutionError(String(e));
+    }
   }
 
   async function runTests() {
@@ -50,14 +108,28 @@ export default function App() {
       <header className="header">
         <h1>SkillBoost</h1>
         <span className="tagline">Find the bug. Make the tests pass.</span>
+        <nav className="lang-tabs">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.id}
+              className={`lang-tab ${language === l.id ? 'active' : ''}`}
+              onClick={() => pickLanguage(l.id)}
+            >
+              {l.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       <div className="layout">
         <aside className="sidebar">
           <h2>Exercises</h2>
           {loadError && <div className="error">{loadError}</div>}
+          {visible.length === 0 && !loadError && (
+            <div className="empty">No exercises for this language yet.</div>
+          )}
           <ul>
-            {exercises.map((ex) => (
+            {visible.map((ex) => (
               <li
                 key={ex.id}
                 className={selected?.id === ex.id ? 'active' : ''}
@@ -84,7 +156,7 @@ export default function App() {
                 <Editor
                   height="380px"
                   defaultLanguage="java"
-                  language={selected.language === 'java' ? 'java' : 'plaintext'}
+                  language={monacoLanguage(selected.language)}
                   value={code}
                   onChange={(v) => setCode(v ?? '')}
                   theme="vs-dark"
@@ -102,7 +174,52 @@ export default function App() {
                 >
                   Reset code
                 </button>
+                {selected.hint && (
+                  <button
+                    className="secondary"
+                    onClick={() => setHintShown((s) => !s)}
+                  >
+                    {hintShown ? 'Hide hint' : 'Show hint'}
+                  </button>
+                )}
+                <button
+                  className="secondary"
+                  onClick={solutionCode ? () => setSolutionCode(null) : revealSolution}
+                >
+                  {solutionCode ? 'Hide solution' : 'Show solution'}
+                </button>
               </section>
+
+              {hintShown && selected.hint && (
+                <section className="hint">
+                  <strong>Hint:</strong> {selected.hint}
+                </section>
+              )}
+
+              {solutionError && (
+                <section className="results">
+                  <pre className="error-output">{solutionError}</pre>
+                </section>
+              )}
+
+              {solutionCode && (
+                <section className="solution">
+                  <h3>Solution (read-only — type it into the editor above)</h3>
+                  <Editor
+                    height="280px"
+                    defaultLanguage="java"
+                    language={monacoLanguage(selected.language)}
+                    value={solutionCode}
+                    theme="vs-dark"
+                    options={{
+                      fontSize: 14,
+                      minimap: { enabled: false },
+                      readOnly: true,
+                      domReadOnly: true,
+                    }}
+                  />
+                </section>
+              )}
 
               {result && <Results result={result} />}
             </>

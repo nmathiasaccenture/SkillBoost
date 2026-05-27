@@ -34,4 +34,13 @@ public class ExerciseController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{id}/solution")
+    public ResponseEntity<SolutionResponse> solution(@PathVariable String id) {
+        return exerciseService.findById(id)
+                .map(ex -> ResponseEntity.ok(new SolutionResponse(ex.solutionCode())))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    public record SolutionResponse(String solutionCode) {}
 }

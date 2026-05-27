@@ -126,6 +126,7 @@ class JavaJudgeTest {
         ExerciseService service = new ExerciseService();
         service.loadExercises();
         return service.list().stream()
+                .filter(ex -> "java".equals(ex.language()))
                 .map(ex -> Arguments.of(Named.of(ex.id(), ex)));
     }
 

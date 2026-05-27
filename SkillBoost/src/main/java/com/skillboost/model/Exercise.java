@@ -10,6 +10,7 @@ public record Exercise(
         int difficulty,
         String title,
         String description,
+        String hint,
         String buggyCode,
         String solutionCode,
         String testHarness,
@@ -20,6 +21,6 @@ public record Exercise(
     @JsonIgnore
     public Exercise toPublicView() {
         return new Exercise(id, language, difficulty, title, description,
-                buggyCode, null, null, tests);
+                hint, buggyCode, null, null, tests);
     }
 }
